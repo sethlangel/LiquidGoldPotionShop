@@ -131,7 +131,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
 
         totalGold = catalog[0]["price"] * totalPotions
 
-        newTotalGreenPots = inv["num_green_potions"] - totalPotions
+        newTotalGreenPots = inv["number_of_potions"] - totalPotions
         newTotalGold = inv["gold"] + totalGold
 
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = :potions, gold = :gold"), {"potions": newTotalGreenPots, "gold": newTotalGold})
