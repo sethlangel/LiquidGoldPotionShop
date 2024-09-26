@@ -46,8 +46,8 @@ def get_bottle_plan():
     # Initial logic: bottle all barrels into red potions.
     inv = get_inventory()
 
-    if inv["num_green_ml"] > 100:
-        numToMake = inv["num_green_ml"] // 100
+    if inv["ml_in_barrels"] > 100:
+        numToMake = inv["ml_in_barrels"] // 100
         return [
             {
                 "potion_type": [0, 100, 0, 0],
