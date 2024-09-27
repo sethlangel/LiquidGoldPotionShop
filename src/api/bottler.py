@@ -22,7 +22,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
     print(f"potions delievered: {potions_delivered} order_id: {order_id}")
     inv = get_inventory()
 
-    amountOfGreenMl = inv["num_green_ml"]
+    amountOfGreenMl = inv["ml_in_barrels"]
 
     for potion in potions_delivered:
         print(potion)
