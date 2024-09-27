@@ -14,7 +14,7 @@ def get_catalog():
 
     return [
             {
-                "sku": "GREEN_POTION",
+                "sku": "GREEN_POTION_1",
                 "name": "green potion",
                 "quantity": inv["number_of_potions"],
                 "price": 25,
