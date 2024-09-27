@@ -55,6 +55,7 @@ def get_bottle_plan():
             }
         ]
 
+    return []
 
 if __name__ == "__main__":
     print(get_bottle_plan())
