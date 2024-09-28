@@ -46,7 +46,7 @@ def get_bottle_plan():
 
     if inv["ml_in_barrels"] > 100:
         numToMake = inv["ml_in_barrels"] // 100
-        potionToSell = [{"potion_typeL": [0,100,0,0], "quantity": numToMake}]
+        potionToSell = [{"potion_type": [0,100,0,0], "quantity": numToMake}]
         print(potionToSell)
         return potionToSell
 

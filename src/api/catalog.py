@@ -14,15 +14,16 @@ def get_catalog():
 
     inv = get_inventory()
 
-    catalog = [
-            {
+    catalog = []
+
+    if(inv["number_of_potions"] > 0):
+        catalog.append({
                 "sku": "GREEN_POTION_1",
                 "name": "green potion",
                 "quantity": inv["number_of_potions"],
                 "price": 25,
                 "potion_type": [0, 100, 0, 0],
-            }
-        ]
+            })
 
     print(catalog)
 
