@@ -7,7 +7,7 @@ from enum import Enum
 import uuid
 import sqlalchemy
 from src import database as db
-from .inventory import get_inventory
+from .inventory import get_liquid_inventory, get_potion_inventory, get_gold_quantity
 
 router = APIRouter(
     prefix="/carts",
@@ -85,7 +85,7 @@ def post_visits(visit_id: int, customers: list[Customer]):
     """
     print(customers)
 
-    return "OK"
+    return {"success": True}
 
 
 @router.post("/")
@@ -126,7 +126,10 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         dic = result.mappings().all()
 
         catalog = get_catalog()
-        inv = get_inventory()
+
+        potionInventory = get_potion_inventory()
+        gold = get_gold_quantity()
+
         totalPotions = 0
 
         for item in dic:
