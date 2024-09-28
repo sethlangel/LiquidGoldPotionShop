@@ -23,7 +23,8 @@ class Barrel(BaseModel):
 
 @router.post("/deliver/{order_id}")
 def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
-    """ """
+    print("-----------------------/barrels/deliver/order_id-----------------------")
+    print(f"Barrels deliverd: {barrels_delivered} order_id: {order_id}")
     inv = inventory.get_inventory()
     currentGold = inv["gold"]
 
@@ -31,25 +32,27 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
         if barrel.sku == "SMALL_GREEN_BARREL":
             with db.engine.begin() as connection:
                 result = connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_ml = {barrel.ml_per_barrel * barrel.quantity}, gold = {currentGold - (barrel.quantity * barrel.price)}"))
-                print(result)
     return "OK"
 
 # Gets called once a day
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
-    """ """
+    print("-----------------------/barrels/plan-----------------------")
 
     inv = inventory.get_inventory()
     print(wholesale_catalog)
 
-    for barrel in wholesale_catalog:
-        if(barrel.sku == "SMALL_GREEN_BARREL"):
-            if(inv["number_of_potions"] < 10 and inv["gold"] >= barrel.price):
-                return [
+    barrelPurchase = [
                     {
                         "sku": "SMALL_GREEN_BARREL",
                         "quantity": 1,
                     }
                 ]
 
+    for barrel in wholesale_catalog:
+        if(barrel.sku == "SMALL_GREEN_BARREL"):
+            if(inv["number_of_potions"] < 10 and inv["gold"] >= barrel.price):
+                print(barrelPurchase)
+                return barrelPurchase
+    print([])
     return []

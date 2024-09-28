@@ -90,12 +90,13 @@ def post_visits(visit_id: int, customers: list[Customer]):
 
 @router.post("/")
 def create_cart(new_cart: Customer):
-    """ """
+    print("-----------------------/carts/-----------------------")
 
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("INSERT INTO shopping_cart DEFAULT VALUES RETURNING id"))
         rows = result.fetchall()
         cart_id = rows[0][0]
+        print(f"cart_id: {cart_id}")
         return {"cart_id": cart_id}
 
 
@@ -105,7 +106,8 @@ class CartItem(BaseModel):
 
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
-    """ """
+    print("-----------------------/carts/cart_id/items/item_sku-----------------------")
+    print(f"item_sku: {item_sku}, quantity: {cart_item}")
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(f"UPDATE shopping_cart SET item_sku = :item_sku, quantity = :quantity WHERE id = :cart_id"), {"item_sku": item_sku, "quantity": cart_item.quantity, "cart_id": cart_id})
 
@@ -117,7 +119,8 @@ class CartCheckout(BaseModel):
 
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
-    """ """
+    print("-----------------------/carts/cart_id/checkout-----------------------")
+    print(f"payment: {cart_checkout.payment}")
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT * FROM shopping_cart WHERE id = :cart_id"), {"cart_id": cart_id})
         dic = result.mappings().all()
@@ -136,4 +139,6 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
 
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = :potions, gold = :gold"), {"potions": newTotalGreenPots, "gold": newTotalGold})
 
-        return {"total_potions_bought": totalPotions, "total_gold_paid": totalGold}
+        checkoutResult = {"total_potions_bought": totalPotions, "total_gold_paid": totalGold}
+        print(checkoutResult)
+        return checkoutResult

@@ -10,9 +10,11 @@ def get_catalog():
     """
     Each unique item combination must have only a single price.
     """
+    print("-----------------------/catalog-----------------------")
+
     inv = get_inventory()
 
-    return [
+    catalog = [
             {
                 "sku": "GREEN_POTION_1",
                 "name": "green potion",
@@ -21,3 +23,7 @@ def get_catalog():
                 "potion_type": [0, 100, 0, 0],
             }
         ]
+
+    print(catalog)
+
+    return catalog
