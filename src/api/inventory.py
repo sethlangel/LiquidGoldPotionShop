@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from src.api import auth
 import math
 from src import database as db
+from src.classes import LiquidInventory, PotionInventory
 
 router = APIRouter(
     prefix="/inventory",
@@ -11,15 +12,45 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
-@router.get("/audit")
-def get_inventory():
-    print("-----------------------/inventory/audit-----------------------")
+def get_gold_quantity():
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT * FROM global_inventory"))
-        dictionary = result.mappings().all()
-        auditReport = {"number_of_potions": dictionary[0]["num_green_potions"], "ml_in_barrels": dictionary[0]["num_green_ml"], "gold": dictionary[0]["gold"]}
-        print(auditReport)
-        return auditReport
+        result = connection.execute(sqlalchemy.text("SELECT gold FROM store_info"))
+        list = result.mappings().all()
+        return list[0]["gold"]
+
+
+def get_liquid_inventory():
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("SELECT * FROM liquid_inventory"))
+        list = result.mappings().all()
+        liquidInventory = [LiquidInventory(**item) for item in list]
+        return liquidInventory
+
+def get_potion_inventory():
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("SELECT * FROM potion_inventory"))
+        list = result.mappings().all()
+        potionInventory = [PotionInventory(**item) for item in list]
+        return potionInventory
+
+#-------------------- API Endpoints --------------------
+
+@router.get("/audit")
+def get_audit_report():
+    liquidInv = get_liquid_inventory()
+    potionInv = get_potion_inventory()
+    totalGold = get_gold_quantity()
+
+    totalPotions = 0
+    totalLiquid = 0
+
+    for liquid in liquidInv:
+        totalLiquid += liquid.quantity
+
+    for potion in potionInv:
+        totalPotions += potion.quantity
+
+    return {"number_of_potions": totalPotions, "ml_in_barrels": totalLiquid, "gold": totalGold}
 
 # Gets called once a day
 @router.post("/plan")
@@ -30,8 +61,8 @@ def get_capacity_plan():
     """
 
     return {
-        "potion_capacity": 0,
-        "ml_capacity": 0
+        "potion_capacity": 1,
+        "ml_capacity": 1
         }
 
 class CapacityPurchase(BaseModel):
