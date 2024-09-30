@@ -24,11 +24,12 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
     inv = get_inventory()
 
     amountOfGreenMl = inv["ml_in_barrels"]
+    amountOfPotions = inv["number_of_potions"]
 
     for potion in potions_delivered:
         if potion.quantity > 0:
             with db.engine.begin() as connection:
-                result = connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_ml = {amountOfGreenMl - (potion.quantity * 100)}, num_green_potions = {potion.quantity}"))
+                result = connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_ml = {amountOfGreenMl - (potion.quantity * 100)}, num_green_potions = {amountOfPotions + potion.quantity}"))
     return "OK"
 
 @router.post("/plan")
