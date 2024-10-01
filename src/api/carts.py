@@ -94,12 +94,11 @@ def post_visits(visit_id: int, customers: list[Customer]):
 
 @router.post("/")
 def create_cart(new_cart: Customer):
-    with db.engine.begin() as connection:
-        customer_id = get_customer_id(new_cart.customer_name, new_cart.character_class)
-        cart_id = insert_new_cart(customer_id)
+    customer_id = get_customer_id(new_cart.customer_name, new_cart.character_class)
+    cart_id = insert_new_cart(customer_id)
 
-        print(f"/carts/ cart_id: {cart_id}")
-        return {"cart_id": cart_id}
+    print(f"/carts/ cart_id: {cart_id}")
+    return {"cart_id": cart_id}
 
 
 class CartItem(BaseModel):
