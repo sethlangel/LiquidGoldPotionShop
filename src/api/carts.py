@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from src.api import auth
 from enum import Enum
-from src import database as db
 from .inventory import get_gold_quantity
 from ..stored_procedures.sp_insert import insert_customer_visit, insert_new_customer, insert_new_cart, \
     insert_item_into_cart

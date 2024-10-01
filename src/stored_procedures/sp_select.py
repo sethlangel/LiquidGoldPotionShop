@@ -9,7 +9,7 @@ def get_customer_id(customer_name: str, customer_class: str):
             f"SELECT id FROM customer WHERE name = '{customer_name}' AND class = '{customer_class}'"))
         customerResult = result.mappings().first()
 
-        if customerResult['id']:
+        if customerResult:
             return customerResult['id']
 
         return None
