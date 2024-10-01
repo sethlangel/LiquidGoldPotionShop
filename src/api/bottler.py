@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
-from enum import Enum
 from pydantic import BaseModel
-from .inventory import get_inventory
 from src.api import auth
-import sqlalchemy
-from src import database as db
+from src.api.inventory import get_liquid_inventory, get_potion_inventory
+from src.functions import find_index_by_potion_type, convert_potion_to_liquid, convert_liquid_to_potion
+from src.stored_procedures.sp_update import update_liquid_inventory, update_potion_inventory
 
 router = APIRouter(
     prefix="/bottler",
@@ -18,41 +17,38 @@ class PotionInventory(BaseModel):
 
 @router.post("/deliver/{order_id}")
 def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int):
-    """ """
-    print("-----------------------/bottler/deliver/order_id-----------------------")
-    print(f"potions delievered: {potions_delivered} order_id: {order_id}")
-    inv = get_inventory()
-
-    amountOfGreenMl = inv["ml_in_barrels"]
-    amountOfPotions = inv["number_of_potions"]
+    potion_inventory = get_potion_inventory()
+    liquid_inventory = get_liquid_inventory()
 
     for potion in potions_delivered:
-        if potion.quantity > 0:
-            with db.engine.begin() as connection:
-                result = connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_ml = {amountOfGreenMl - (potion.quantity * 100)}, num_green_potions = {amountOfPotions + potion.quantity}"))
+        new_potion_quantity = potion_inventory[find_index_by_potion_type(liquid_inventory, potion.potion_type)].quantity + potion.quantity
+
+        liquid_type = convert_potion_to_liquid(potion.potion_type)
+        new_liquid_quantity = liquid_inventory[find_index_by_potion_type(liquid_inventory, liquid_type)].quantity - potion.quantity * 100
+
+        update_liquid_inventory(new_liquid_quantity, liquid_type)
+        update_potion_inventory(new_potion_quantity, potion.potion_type)
+
+    print(f"/bottler/deliver/order_id | potions delievered: {potions_delivered} order_id: {order_id}")
+
     return "OK"
 
 @router.post("/plan")
 def get_bottle_plan():
-    """
-    Go from barrel to bottle.
-    """
-    print("-----------------------/bottler/plan-----------------------")
-    # Each bottle has a quantity of what proportion of red, blue, and
-    # green potion to add.
-    # Expressed in integers from 1 to 100 that must sum up to 100.
+    liquid_inventory = get_liquid_inventory()
+    potions_to_make = []
 
-    # Initial logic: bottle all barrels into red potions.
-    inv = get_inventory()
+    for liquid in liquid_inventory:
+        potion_type = convert_liquid_to_potion(liquid.potion_type)
 
-    if inv["ml_in_barrels"] > 100:
-        numToMake = inv["ml_in_barrels"] // 100
-        potionToSell = [{"potion_type": [0,100,0,0], "quantity": numToMake}]
-        print(potionToSell)
-        return potionToSell
+        if liquid.quantity > 100:
+            num_to_make = liquid.quantity // 100
 
-    print([])
-    return []
+            potions_to_make.append({"potion_type": potion_type, "quantity": num_to_make})
+
+    print(f"/bottler/plan: {potions_to_make}")
+
+    return potions_to_make
 
 if __name__ == "__main__":
     print(get_bottle_plan())

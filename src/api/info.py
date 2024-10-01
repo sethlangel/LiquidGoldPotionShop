@@ -12,10 +12,22 @@ class Timestamp(BaseModel):
     day: str
     hour: int
 
+cur_time: Timestamp
+
+def get_timestamp():
+    if cur_time is not None:
+        return (f"{cur_time.day} {cur_time.hour}")
+    else:
+        return "Unknown"
+
 @router.post("/current_time")
 def post_time(timestamp: Timestamp):
     """
     Share current time.
     """
+    global cur_time
+    cur_time = timestamp
+    print(timestamp)
+
     return "OK"
 
