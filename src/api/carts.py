@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-from sqlalchemy.dialects.mysql import pymysql
-from .catalog import get_catalog
 from src.api import auth
 from enum import Enum
-import uuid
-import sqlalchemy
 from src import database as db
-from .inventory import get_liquid_inventory, get_potion_inventory, get_gold_quantity
+from .inventory import get_gold_quantity
+from ..stored_procedures.sp_insert import insert_customer_visit, insert_new_customer, insert_new_cart, \
+    insert_item_into_cart
+from ..stored_procedures.sp_select import get_customer_id, get_potion_id, get_shopping_cart
+from ..stored_procedures.sp_update import update_potion_inventory, update_gold
 
 router = APIRouter(
     prefix="/carts",
@@ -23,7 +23,7 @@ class search_sort_options(str, Enum):
 
 class search_sort_order(str, Enum):
     asc = "asc"
-    desc = "desc"   
+    desc = "desc"
 
 @router.get("/search/", tags=["search"])
 def search_orders(
@@ -80,23 +80,25 @@ class Customer(BaseModel):
 
 @router.post("/visits/{visit_id}")
 def post_visits(visit_id: int, customers: list[Customer]):
-    """
-    Which customers visited the shop today?
-    """
+    for visitingCustomer in customers:
+            customer_id = get_customer_id(visitingCustomer.customer_name, visitingCustomer.character_class)
+            if customer_id:
+                insert_customer_visit(customer_id, visit_id)
+            else:
+                new_customer_id = insert_new_customer(visitingCustomer.customer_name, visitingCustomer.character_class, visitingCustomer.level)
+                insert_customer_visit(new_customer_id, visit_id)
+
     print(customers)
 
     return {"success": True}
 
-
 @router.post("/")
 def create_cart(new_cart: Customer):
-    print("-----------------------/carts/-----------------------")
-
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("INSERT INTO shopping_cart DEFAULT VALUES RETURNING id"))
-        rows = result.fetchall()
-        cart_id = rows[0][0]
-        print(f"cart_id: {cart_id}")
+        customer_id = get_customer_id(new_cart.customer_name, new_cart.character_class)
+        cart_id = insert_new_cart(customer_id)
+
+        print(f"/carts/ cart_id: {cart_id}")
         return {"cart_id": cart_id}
 
 
@@ -106,10 +108,11 @@ class CartItem(BaseModel):
 
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
-    print("-----------------------/carts/cart_id/items/item_sku-----------------------")
-    print(f"item_sku: {item_sku}, quantity: {cart_item}")
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(f"UPDATE shopping_cart SET item_sku = :item_sku, quantity = :quantity WHERE id = :cart_id"), {"item_sku": item_sku, "quantity": cart_item.quantity, "cart_id": cart_id})
+
+    potion_id = get_potion_id(item_sku)
+    insert_item_into_cart(cart_id, potion_id, cart_item.quantity)
+
+    print(f" /carts/cart_id/items/item_sku | item_sku: {item_sku}, quantity: {cart_item}")
 
     return "OK"
 
@@ -119,29 +122,25 @@ class CartCheckout(BaseModel):
 
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
-    print("-----------------------/carts/cart_id/checkout-----------------------")
-    print(f"payment: {cart_checkout.payment}")
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT * FROM shopping_cart WHERE id = :cart_id"), {"cart_id": cart_id})
-        dic = result.mappings().all()
+    cart =  get_shopping_cart(cart_id)
 
-        catalog = get_catalog()
+    total_potions = 0
+    total_gold = 0
 
-        potionInventory = get_potion_inventory()
-        gold = get_gold_quantity()
+    for item in cart:
+        total_potions += item["cart_item_quantity"]
+        total_gold += item["cart_item_quantity"] * item["potion_price"]
 
-        totalPotions = 0
+        new_potion_quantity = item["potion_inventory_quantity"] - item["cart_item_quantity"]
 
-        for item in dic:
-            totalPotions += int(item["quantity"])
+        update_potion_inventory(new_potion_quantity, item["potion_type"])
 
-        totalGold = catalog[0]["price"] * totalPotions
+    new_gold_quantity = get_gold_quantity() + total_gold
+    update_gold(new_gold_quantity)
 
-        newTotalGreenPots = inv["number_of_potions"] - totalPotions
-        newTotalGold = inv["gold"] + totalGold
+    checkout_result = {"total_potions_bought": total_potions, "total_gold_paid": total_gold}
 
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = :potions, gold = :gold"), {"potions": newTotalGreenPots, "gold": newTotalGold})
+    print(f"/carts/cart_id/checkout | {checkout_result}")
+    print(f"/carts/cart_id/checkout | payment: {cart_checkout.payment}")
 
-        checkoutResult = {"total_potions_bought": totalPotions, "total_gold_paid": totalGold}
-        print(checkoutResult)
-        return checkoutResult
+    return checkout_result

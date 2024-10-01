@@ -1,17 +1,14 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth, inventory
-import sqlalchemy
-from src import database as db
 from src.api.inventory import get_liquid_inventory, get_potion_inventory, get_gold_quantity
+from src.stored_procedures.sp_update import update_liquid_inventory, update_gold
 
 router = APIRouter(
     prefix="/barrels",
     tags=["barrels"],
     dependencies=[Depends(auth.get_api_key)],
 )
-
-
 
 class Barrel(BaseModel):
     sku: str
@@ -24,24 +21,28 @@ class Barrel(BaseModel):
 
 @router.post("/deliver/{order_id}")
 def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
-    """ """
     liquidInventory = get_liquid_inventory()
-    currentGold = get_gold_quantity()
-    print("-----------------------/barrels/deliver/order_id-----------------------")
-    print(f"Barrels deliverd: {barrels_delivered} order_id: {order_id}")
 
     for barrel in barrels_delivered:
-        with db.engine.begin() as connection:
-            result = connection.execute(sqlalchemy.text(f"UPDATE liquid_inventory SET quantity = {barrel.ml_per_barrel * barrel.quantity}, gold = {currentGold - (barrel.quantity * barrel.price)}"))
-            print(result)
+        index = -1
+        for i, obj in enumerate(liquidInventory):
+            if obj.potion_type == barrel.potion_type:
+                index = i
+                break
+
+        newMlQuantity = (barrel.ml_per_barrel * barrel.quantity) + liquidInventory[index].quantity
+        newGoldQuantity = get_gold_quantity() - (barrel.price * barrel.quantity)
+
+        update_liquid_inventory(newMlQuantity, barrel.potion_type)
+        update_gold(newGoldQuantity)
+
+    print(f"/barrels/deliver/order_id | Barrels deliverd: {barrels_delivered} order_id: {order_id}")
 
     return "OK"
 
 # Gets called once a day
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
-    print("-----------------------/barrels/plan-----------------------")
-
     liquidInventory = get_liquid_inventory()
     potionInventory = get_potion_inventory()
 
@@ -53,24 +54,24 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     for potion in potionInventory:
         for barrel in wholesale_catalog:
-            if potion.name == "green_potion" and potion.quantity < 1:
+            if potion.sku == "green_potion" and potion.quantity < 10:
                 if barrel.sku == "SMALL_GREEN_BARREL" and gold > barrel.price:
                     purchaseBarrels.append({
                         "sku": barrel.sku,
                         "quantity": 1
                     })
-            if potion.name == "red_potion" and potion.quantity < 1:
+            if potion.sku == "red_potion" and potion.quantity < 10:
                 if barrel.sku == "SMALL_RED_BARREL" and gold > barrel.price:
                     purchaseBarrels.append({
                         "sku": barrel.sku,
                         "quantity": 1
                     })
-            if potion.name == "blue_potion" and potion.quantity < 1:
+            if potion.sku == "blue_potion" and potion.quantity < 10:
                 if barrel.sku == "SMALL_BLUE_BARREL" and gold > barrel.price:
                     purchaseBarrels.append({
                         "sku": barrel.sku,
                         "quantity": 1
                     })
 
-    print(purchaseBarrels)
+    print(f"/barrels/plan: {purchaseBarrels}")
     return purchaseBarrels

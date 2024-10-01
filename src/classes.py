@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 class PotionInventory(BaseModel):
     sku: str
     name: str
