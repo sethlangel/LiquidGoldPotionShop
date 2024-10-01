@@ -33,6 +33,8 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
         newMlQuantity = (barrel.ml_per_barrel * barrel.quantity) + liquidInventory[index].quantity
         newGoldQuantity = get_gold_quantity() - (barrel.price * barrel.quantity)
 
+        print(f"/barrels/deliver/order_id | New barrel quantity: {newMlQuantity} for liquid type: {barrel.potion_type}, Gold spent: {barrel.price * barrel.quantity}, New gold quantity: {newGoldQuantity}")
+
         update_liquid_inventory(newMlQuantity, barrel.potion_type)
         update_gold(newGoldQuantity)
 
