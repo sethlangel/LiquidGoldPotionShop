@@ -42,19 +42,18 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     inv = inventory.get_inventory()
     print(wholesale_catalog)
 
-    barrels_to_buy = inv["gold"] // 100
-
     barrelPurchase = [
                     {
                         "sku": "SMALL_GREEN_BARREL",
-                        "quantity": barrels_to_buy,
+                        "quantity": 1,
                     }
                 ]
 
     for barrel in wholesale_catalog:
         if(barrel.sku == "SMALL_GREEN_BARREL"):
-            if(inv["number_of_potions"] < 50 and barrels_to_buy > 0):
-                print(barrelPurchase)
+            if(inv["number_of_potions"] < 50 and inv["gold"] > 100):
+                print(f"/barrels/plan: {barrelPurchase}")
                 return barrelPurchase
-    print([])
+
+    print(f"/barrels/plan: {[]}")
     return []
