@@ -30,13 +30,13 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
                 index = i
                 break
 
-        new_ml_quantity = (barrel.ml_per_barrel * barrel.quantity) + liquidInventory[index].quantity
-        new_gold_quantity = get_gold_quantity() - (barrel.price * barrel.quantity)
+        ml_quantity = (barrel.ml_per_barrel * barrel.quantity)
+        gold_spent = (barrel.price * barrel.quantity)
 
-        print(f"/barrels/deliver/order_id | New barrel quantity: {new_ml_quantity} for liquid type: {barrel.potion_type}, Gold spent: {barrel.price * barrel.quantity}, New gold quantity: {new_gold_quantity}")
+        print(f"/barrels/deliver/order_id | barrel quantity bought: {ml_quantity} for liquid type: {barrel.potion_type}, Gold spent: {barrel.price * barrel.quantity}")
 
-        update_liquid_inventory(new_ml_quantity, barrel.potion_type)
-        update_gold(new_gold_quantity)
+        update_liquid_inventory(ml_quantity, barrel.potion_type)
+        update_gold(-gold_spent)
 
     print(f"/barrels/deliver/order_id | Barrels deliverd: {barrels_delivered} order_id: {order_id}")
 
@@ -74,5 +74,4 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     })
 
     print(f"/barrels/plan: {purchase_barrels}")
-    # return purchase_barrels
-    return []
+    return purchase_barrels

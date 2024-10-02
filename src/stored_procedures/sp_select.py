@@ -30,7 +30,12 @@ def get_potion_id(sku: str):
 
 def get_shopping_cart(cart_id: int):
     with db.engine.begin() as conn:
-        result = conn.execute(sqlalchemy.text(f"SELECT cart_id, cart_items.quantity AS cart_item_quantity, potion_inventory.id AS potion_id, potion_inventory.potion_type AS potion_type, potion_inventory.price AS potion_price, potion_inventory.quantity AS potion_inventory_quantity FROM cart JOIN cart_items ON cart.id = cart_items.cart_id JOIN potion_inventory ON cart_items.potion_id = potion_inventory.id WHERE cart.id = {cart_id}"))
+        result = conn.execute(sqlalchemy.text(f"""SELECT cart_id, 
+                                              cart_items.quantity AS cart_item_quantity, 
+                                              potion_inventory.id AS potion_id, 
+                                              potion_inventory.potion_type AS potion_type, 
+                                              potion_inventory.price AS potion_price, 
+                                              potion_inventory.quantity AS potion_inventory_quantity FROM cart JOIN cart_items ON cart.id = cart_items.cart_id JOIN potion_inventory ON cart_items.potion_id = potion_inventory.id WHERE cart.id = {cart_id}"""))
         return [ShoppingCart(**item) for item in result.mappings().all()]
 
 def get_gold_quantity():

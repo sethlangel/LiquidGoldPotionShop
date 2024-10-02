@@ -21,15 +21,13 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
     liquid_inventory = get_liquid_inventory()
 
     for potion in potions_delivered:
-        new_potion_quantity = potion_inventory[find_index_by_potion_type(liquid_inventory, potion.potion_type)].quantity + potion.quantity
-        print(f"/bottler/deliver/order_id | New Potion type: {potion.potion_type} | Old Quantity: {potion_inventory[find_index_by_potion_type(liquid_inventory, potion.potion_type)].quantity} | New Quantity: {new_potion_quantity}")
+        print(f"/bottler/deliver/order_id | New Potion type: {potion.potion_type} | Old Quantity: {potion_inventory[find_index_by_potion_type(liquid_inventory, potion.potion_type)].quantity}")
 
         liquid_type = convert_potion_to_liquid(potion.potion_type)
-        new_liquid_quantity = liquid_inventory[find_index_by_potion_type(liquid_inventory, liquid_type)].quantity - potion.quantity * 100
-        print(f"/bottler/deliver/order_id | Liquid type: {liquid_type} | Old Quantity: {liquid_inventory[find_index_by_potion_type(liquid_inventory, liquid_type)].quantity} | New Quantity: {new_liquid_quantity}")
+        print(f"/bottler/deliver/order_id | Liquid type: {liquid_type} | Old Quantity: {liquid_inventory[find_index_by_potion_type(liquid_inventory, liquid_type)].quantity}")
 
-        update_liquid_inventory(new_liquid_quantity, liquid_type)
-        update_potion_inventory(new_potion_quantity, potion.potion_type)
+        update_liquid_inventory(-(potion.quantity * 100), liquid_type)
+        update_potion_inventory(potion.quantity, potion.potion_type)
 
     print(f"/bottler/deliver/order_id | potions delievered: {potions_delivered} order_id: {order_id}")
 
@@ -50,8 +48,7 @@ def get_bottle_plan():
 
     print(f"/bottler/plan: {potions_to_make}")
 
-    # return potions_to_make
-    return []
+    return potions_to_make
 
 if __name__ == "__main__":
     print(get_bottle_plan())
