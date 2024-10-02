@@ -106,7 +106,6 @@ class CartItem(BaseModel):
 
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
-
     potion_id = get_potion_id(item_sku)
     insert_item_into_cart(cart_id, potion_id, cart_item.quantity)
 
@@ -126,18 +125,15 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     total_gold = 0
 
     for item in cart:
-        total_potions += item["cart_item_quantity"]
-        total_gold += item["cart_item_quantity"] * item["potion_price"]
+        total_potions += item.cart_item_quantity
+        total_gold += item.cart_item_quantity * item.potion_price
 
-        new_gold_from_potion = get_gold_quantity() + item["cart_item_quantity"] * item["potion_price"]
+        new_gold_from_potion = get_gold_quantity() + (item.cart_item_quantity * item.potion_price)
 
-        new_potion_quantity = item["potion_inventory_quantity"] - item["cart_item_quantity"]
+        new_potion_quantity = item.potion_inventory_quantity - item.cart_item_quantity
 
-        old_potion_quantity = item["potion_inventory_quantity"]
-        total_bought = item["cart_item_quantity"]
-        potion_type = item["potion_type"]
-        print(f"/carts/cart_id/checkout | Old Potion Quantity: {old_potion_quantity} Total Bought: {total_bought} New Potion Quantity: {new_potion_quantity} for potion type: {potion_type}, New Gold: {new_gold_from_potion}")
-        update_potion_inventory(new_potion_quantity, item["potion_type"])
+        print(f"/carts/{cart_id}/checkout | Old Potion Quantity: {item.potion_inventory_quantity} Total Bought: {item.cart_item_quantity} New Potion Quantity: {new_potion_quantity} for potion type: {item.potion_type}, Total Sale: {item.cart_item_quantity * item.potion_price} New Gold: {new_gold_from_potion}")
+        update_potion_inventory(new_potion_quantity, item.potion_type)
 
     new_gold_quantity = get_gold_quantity() + total_gold
     update_gold(new_gold_quantity)
