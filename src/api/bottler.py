@@ -50,7 +50,8 @@ def get_bottle_plan():
 
     print(f"/bottler/plan: {potions_to_make}")
 
-    return potions_to_make
+    # return potions_to_make
+    return []
 
 if __name__ == "__main__":
     print(get_bottle_plan())

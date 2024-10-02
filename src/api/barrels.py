@@ -30,13 +30,13 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
                 index = i
                 break
 
-        newMlQuantity = (barrel.ml_per_barrel * barrel.quantity) + liquidInventory[index].quantity
-        newGoldQuantity = get_gold_quantity() - (barrel.price * barrel.quantity)
+        new_ml_quantity = (barrel.ml_per_barrel * barrel.quantity) + liquidInventory[index].quantity
+        new_gold_quantity = get_gold_quantity() - (barrel.price * barrel.quantity)
 
-        print(f"/barrels/deliver/order_id | New barrel quantity: {newMlQuantity} for liquid type: {barrel.potion_type}, Gold spent: {barrel.price * barrel.quantity}, New gold quantity: {newGoldQuantity}")
+        print(f"/barrels/deliver/order_id | New barrel quantity: {new_ml_quantity} for liquid type: {barrel.potion_type}, Gold spent: {barrel.price * barrel.quantity}, New gold quantity: {new_gold_quantity}")
 
-        update_liquid_inventory(newMlQuantity, barrel.potion_type)
-        update_gold(newGoldQuantity)
+        update_liquid_inventory(new_ml_quantity, barrel.potion_type)
+        update_gold(new_gold_quantity)
 
     print(f"/barrels/deliver/order_id | Barrels deliverd: {barrels_delivered} order_id: {order_id}")
 
@@ -45,35 +45,34 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
 # Gets called once a day
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
-    liquidInventory = get_liquid_inventory()
-    potionInventory = get_potion_inventory()
-
+    potion_inventory = get_potion_inventory()
     gold = get_gold_quantity()
 
     print(wholesale_catalog)
 
-    purchaseBarrels = []
+    purchase_barrels = []
 
-    for potion in potionInventory:
+    for potion in potion_inventory:
         for barrel in wholesale_catalog:
             if potion.sku == "green_potion" and potion.quantity < 10:
                 if barrel.sku == "SMALL_GREEN_BARREL" and gold > barrel.price:
-                    purchaseBarrels.append({
+                    purchase_barrels.append({
                         "sku": barrel.sku,
                         "quantity": 1
                     })
             if potion.sku == "red_potion" and potion.quantity < 10:
                 if barrel.sku == "SMALL_RED_BARREL" and gold > barrel.price:
-                    purchaseBarrels.append({
+                    purchase_barrels.append({
                         "sku": barrel.sku,
                         "quantity": 1
                     })
             if potion.sku == "blue_potion" and potion.quantity < 10:
                 if barrel.sku == "SMALL_BLUE_BARREL" and gold > barrel.price:
-                    purchaseBarrels.append({
+                    purchase_barrels.append({
                         "sku": barrel.sku,
                         "quantity": 1
                     })
 
-    print(f"/barrels/plan: {purchaseBarrels}")
-    return purchaseBarrels
+    print(f"/barrels/plan: {purchase_barrels}")
+    # return purchase_barrels
+    return []
