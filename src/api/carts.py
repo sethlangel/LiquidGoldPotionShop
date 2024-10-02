@@ -129,12 +129,14 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         total_potions += item["cart_item_quantity"]
         total_gold += item["cart_item_quantity"] * item["potion_price"]
 
+        new_gold_from_potion = get_gold_quantity() + item["cart_item_quantity"] * item["potion_price"]
+
         new_potion_quantity = item["potion_inventory_quantity"] - item["cart_item_quantity"]
 
         old_potion_quantity = item["potion_inventory_quantity"]
         total_bought = item["cart_item_quantity"]
         potion_type = item["potion_type"]
-        print(f"/carts/cart_id/checkout | Old Potion Quantity: {old_potion_quantity} Total Bought: {total_bought} New Potion Quantity: {new_potion_quantity} for potion type: {potion_type}")
+        print(f"/carts/cart_id/checkout | Old Potion Quantity: {old_potion_quantity} Total Bought: {total_bought} New Potion Quantity: {new_potion_quantity} for potion type: {potion_type}, New Gold: {new_gold_from_potion}")
         update_potion_inventory(new_potion_quantity, item["potion_type"])
 
     new_gold_quantity = get_gold_quantity() + total_gold

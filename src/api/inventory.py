@@ -24,7 +24,7 @@ def get_audit_report():
 
     for potion in potion_inv:
         total_potions += potion.quantity
-
+    print({"number_of_potions": total_potions, "ml_in_barrels": total_liquid, "gold": total_gold})
     return {"number_of_potions": total_potions, "ml_in_barrels": total_liquid, "gold": total_gold}
 
 # Gets called once a day
