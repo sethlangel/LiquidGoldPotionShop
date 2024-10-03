@@ -17,3 +17,11 @@ def update_potion_inventory(new_quantity: int, potion_type: list[int]):
 def update_gold(new_quantity: int):
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(f"UPDATE store_info SET gold = gold + {new_quantity}"))
+
+def update_cart_payment_method(cart_id: int, payment_method: str):
+    print(cart_id)
+    print(payment_method)
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(f"""UPDATE cart 
+                                           SET payment_method = '{payment_method}' 
+                                           WHERE id = {cart_id}"""))

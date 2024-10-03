@@ -6,7 +6,7 @@ from .inventory import get_gold_quantity
 from ..stored_procedures.sp_insert import insert_customer_visit, insert_new_customer, insert_new_cart, \
     insert_item_into_cart
 from ..stored_procedures.sp_select import get_customer_id, get_potion_id, get_shopping_cart
-from ..stored_procedures.sp_update import update_potion_inventory, update_gold
+from ..stored_procedures.sp_update import update_cart_payment_method, update_potion_inventory, update_gold
 
 router = APIRouter(
     prefix="/carts",
@@ -140,10 +140,10 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         update_potion_inventory(-item.cart_item_quantity, item.potion_type)
 
     update_gold(total_gold)
+    update_cart_payment_method(cart_id, cart_checkout.payment)
 
     checkout_result = {"total_potions_bought": total_potions, "total_gold_paid": total_gold}
 
     print(f"/carts/cart_id/checkout | {checkout_result}")
-    print(f"/carts/cart_id/checkout | payment: {cart_checkout.payment}")
 
     return checkout_result
