@@ -19,8 +19,6 @@ def update_gold(new_quantity: int):
         connection.execute(sqlalchemy.text(f"UPDATE store_info SET gold = gold + {new_quantity}"))
 
 def update_cart_payment_method(cart_id: int, payment_method: str):
-    print(cart_id)
-    print(payment_method)
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(f"""UPDATE cart 
                                            SET payment_method = '{payment_method}' 
