@@ -26,6 +26,5 @@ def post_time(timestamp: Timestamp):
 
     global cur_time
     cur_time = timestamp
-    print(timestamp)
 
     return "OK"

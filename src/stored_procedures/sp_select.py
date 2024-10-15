@@ -1,16 +1,6 @@
 import sqlalchemy
-from pydantic import BaseModel
-
 from src import database as db
-from src.classes import LiquidInventory, PotionInventory
-
-class ShoppingCart(BaseModel):
-    cart_item_quantity: int
-    potion_id: int
-    potion_type: list[int]
-    potion_price: int
-    potion_inventory_quantity: int
-
+from src.classes import Audit, LiquidInventory, PotionInventory, ShoppingCart, StoreInfo
 
 def get_customer_id(customer_name: str, customer_class: str):
     with db.engine.begin() as conn:
@@ -63,3 +53,29 @@ def get_potion_inventory():
         list = result.mappings().all()
         potionInventory = [PotionInventory(**item) for item in list]
         return potionInventory
+    
+def get_audit():
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("""
+                                                    SELECT(SELECT SUM(quantity) FROM potion_inventory) AS number_of_potions,
+                                                    (SELECT SUM(quantity) FROM liquid_inventory) AS ml_in_barrels,
+                                                    gold AS gold
+                                                    FROM
+                                                    store_info
+                                                    LIMIT 1;
+                                                    """))
+        return Audit(**result.mappings().first()) 
+    
+def get_store_info():
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("""SELECT(SELECT SUM(quantity) FROM potion_inventory) AS number_of_potions,
+                                                        (SELECT SUM(quantity) FROM liquid_inventory) AS ml_in_barrels,
+                                                        gold AS gold, 
+                                                        liquid_capacity,
+                                                        potion_capacity
+                                                        FROM
+                                                        store_info
+                                                        LIMIT
+                                                        1;
+                                                    """))
+        return StoreInfo(**result.mappings().first()) 

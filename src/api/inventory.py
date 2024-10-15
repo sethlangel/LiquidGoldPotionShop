@@ -2,7 +2,7 @@ import sqlalchemy
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
-from src.stored_procedures.sp_select import get_liquid_inventory, get_potion_inventory, get_gold_quantity
+from src.stored_procedures.sp_select import get_audit, get_liquid_inventory, get_potion_inventory, get_gold_quantity
 
 router = APIRouter(
     prefix="/inventory",
@@ -11,21 +11,8 @@ router = APIRouter(
 )
 
 @router.get("/audit")
-def get_audit_report():
-    liquid_inv = get_liquid_inventory()
-    potion_inv = get_potion_inventory()
-    total_gold = get_gold_quantity()
-
-    total_potions = 0
-    total_liquid = 0
-
-    for liquid in liquid_inv:
-        total_liquid += liquid.quantity
-
-    for potion in potion_inv:
-        total_potions += potion.quantity
-    print({"number_of_potions": total_potions, "ml_in_barrels": total_liquid, "gold": total_gold})
-    return {"number_of_potions": total_potions, "ml_in_barrels": total_liquid, "gold": total_gold}
+def audit():
+    return get_audit()
 
 # Gets called once a day
 @router.post("/plan")
