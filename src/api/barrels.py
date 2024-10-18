@@ -36,6 +36,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     store_info = get_store_info()
     liquid_inventory = get_liquid_inventory()
     potion_inventory = get_potion_inventory()
+
+    print(wholesale_catalog)
     
     updated_gold = store_info.gold
 
