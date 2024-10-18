@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from src.api import auth, inventory
 from src.api.inventory import get_liquid_inventory, get_potion_inventory, get_gold_quantity
 from src.classes import Barrel
+from src.functions import find_available_liquid
 from src.stored_procedures.sp_select import get_store_info
 from src.stored_procedures.sp_update import update_liquid_inventory, update_gold
 
@@ -34,41 +35,56 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     store_info = get_store_info()
     liquid_inventory = get_liquid_inventory()
-    liquid_limit = store_info.liquid_capacity * 10000
-
+    potion_inventory = get_potion_inventory()
+    
     updated_gold = store_info.gold
 
-    max_to_buy = liquid_limit // 4
-    liquid_needed = [max_to_buy - liquid_inventory[i].quantity for i in range(len(liquid_inventory))]
-    sorted_barrels = sorted(wholesale_catalog, key=lambda barrel: barrel.price / barrel.ml_per_barrel)
+    liquid_limit = store_info.liquid_capacity * 10000
+    liquid_needed = [liquid_limit // 4 - liquid_inventory[i].quantity for i in range(len(liquid_inventory))]
 
+    total_liquid_in_potions = [sum(potion.potion_type[i] * potion.quantity for potion in potion_inventory if potion.quantity > 0) for i in range(4)]
+    available_liquid_in_ml = find_available_liquid(liquid_inventory)
+    grand_total_liquid = [total_liquid_in_potions[i] + available_liquid_in_ml[i] for i in range(len(liquid_inventory))]
+
+    sorted_index = sorted(range(len(grand_total_liquid)), key=lambda i: grand_total_liquid[i])
+
+    sorted_barrels = sorted(
+    wholesale_catalog,
+    key=lambda barrel: (
+            -barrel.price / barrel.ml_per_barrel,
+            -barrel.potion_type[sorted_index[0]],
+            -barrel.potion_type[sorted_index[1]],
+            -barrel.potion_type[sorted_index[2]],
+            -barrel.potion_type[sorted_index[3]]
+        )
+    )
+    print(sorted_barrels)
     purchase_barrels = []
 
-    for i, needed in enumerate(liquid_needed):
+    for i, barrel in enumerate(sorted_barrels):
+        needed = liquid_needed[sorted_index[0]]
         if needed <= 0:
-            continue
+            break 
 
-        for barrel in sorted_barrels:
-            if barrel.potion_type[i] == 1 and needed > 0 and barrel.ml_per_barrel >= 500:
-                max_barrels_to_buy = min(needed // barrel.ml_per_barrel, barrel.quantity)
-                
-                if max_barrels_to_buy > 0:
-                    total_cost = barrel.price * max_barrels_to_buy
-                    
-                    if total_cost > updated_gold:
-                        max_barrels_to_buy = updated_gold // barrel.price
+        max_barrels_to_buy = min(needed // barrel.ml_per_barrel, barrel.quantity)
 
-                    if max_barrels_to_buy > 0:
-                        updated_gold -= (barrel.price * max_barrels_to_buy)
-                        needed -= (barrel.ml_per_barrel * max_barrels_to_buy)
+        if max_barrels_to_buy > 0 and barrel.ml_per_barrel >= 500:
+            total_cost = barrel.price * max_barrels_to_buy
 
-                        purchase_barrels.append({
-                            "sku": barrel.sku,
-                            "quantity": max_barrels_to_buy
-                        })
+            if total_cost > updated_gold:
+                max_barrels_to_buy = updated_gold // barrel.price
 
-                if needed <= 0:
-                    break
+            if max_barrels_to_buy > 0:
+                if barrel.ml_per_barrel == 500:
+                    max_barrels_to_buy = 1
+
+                updated_gold -= (barrel.price * max_barrels_to_buy)
+                needed -= (barrel.ml_per_barrel * max_barrels_to_buy)
+
+                purchase_barrels.append({
+                    "sku": barrel.sku,
+                    "quantity": max_barrels_to_buy
+                })
 
     print(f"/barrels/plan: {purchase_barrels}")
     return purchase_barrels

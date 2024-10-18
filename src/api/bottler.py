@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from src.api import auth
 from src.api.inventory import get_liquid_inventory, get_potion_inventory
-from src.classes import PotionInventory
+from src.classes import PotionPlan
 from src.functions import find_available_liquid, find_index_by_potion_type, convert_potion_to_liquid
 from src.stored_procedures.sp_select import get_audit, get_store_info
 from src.stored_procedures.sp_update import update_liquid_inventory, update_potion_inventory
@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 @router.post("/deliver/{order_id}")
-def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int):
+def post_deliver_bottles(potions_delivered: list[PotionPlan], order_id: int):
     liquid_type_map = [[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
     liquid_used = [0,0,0,0]
 
@@ -34,7 +34,8 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
 @router.post("/plan")
 def get_bottle_plan():
     potion_inventory = get_potion_inventory()
-    liquid_available = find_available_liquid()
+    liquid_inventory = get_liquid_inventory()
+    liquid_available = find_available_liquid(liquid_inventory)
     store_info = get_store_info()
 
     potion_limit = store_info.potion_capacity * 50
