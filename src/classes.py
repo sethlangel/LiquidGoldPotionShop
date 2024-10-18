@@ -32,7 +32,7 @@ class StoreInfo(BaseModel):
     liquid_capacity: int
     potion_capacity: int
 
-class PotionInventory(BaseModel):
+class PotionPlan(BaseModel):
     potion_type: list[int]
     quantity: int
 

@@ -36,6 +36,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     liquid_inventory = get_liquid_inventory()
     liquid_limit = store_info.liquid_capacity * 10000
 
+    print(wholesale_catalog)
+
     updated_gold = store_info.gold
 
     max_to_buy = liquid_limit // 4
