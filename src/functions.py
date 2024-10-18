@@ -12,7 +12,7 @@ def find_index_by_potion_type(list, target_potion_type):
 def convert_potion_to_liquid(potion_type: list[int]):
     return [x // x for x in potion_type]
 
-def find_available_liquid() -> List[int]:
+def find_available_liquid(liquid_inventory) -> List[int]:
     liquid_inventory = get_liquid_inventory()
     liquid_available = [0,0,0,0]
     for liquid in liquid_inventory:
