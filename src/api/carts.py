@@ -79,13 +79,13 @@ class Customer(BaseModel):
 
 @router.post("/visits/{visit_id}")
 def post_visits(visit_id: int, customers: list[Customer]):
-    for visitingCustomer in customers:
-            customer_id = get_customer_id(visitingCustomer.customer_name, visitingCustomer.character_class)
-            if customer_id:
-                insert_customer_visit(customer_id, visit_id)
-            else:
-                new_customer_id = insert_new_customer(visitingCustomer.customer_name, visitingCustomer.character_class, visitingCustomer.level)
-                insert_customer_visit(new_customer_id, visit_id)
+    # for visitingCustomer in customers:
+    #         customer_id = get_customer_id(visitingCustomer.customer_name, visitingCustomer.character_class)
+    #         if customer_id:
+    #             insert_customer_visit(customer_id, visit_id)
+    #         else:
+    #             new_customer_id = insert_new_customer(visitingCustomer.customer_name, visitingCustomer.character_class, visitingCustomer.level)
+    #             insert_customer_visit(new_customer_id, visit_id)
 
     print(customers)
 
