@@ -4,9 +4,10 @@ from src.api import auth
 from enum import Enum
 from .inventory import get_gold_quantity
 from ..stored_procedures.sp_insert import insert_customer_visit, insert_new_customer, insert_new_cart, \
-    insert_item_into_cart
+    insert_item_into_cart, log_customer_visit
 from ..stored_procedures.sp_select import get_customer_id, get_potion_id, get_shopping_cart
 from ..stored_procedures.sp_update import update_cart_payment_method, update_potion_inventory, update_gold
+from src.classes import Customer
 
 router = APIRouter(
     prefix="/carts",
@@ -72,23 +73,11 @@ def search_orders(
     }
 
 
-class Customer(BaseModel):
-    customer_name: str
-    character_class: str
-    level: int
-
 @router.post("/visits/{visit_id}")
 def post_visits(visit_id: int, customers: list[Customer]):
-    for visitingCustomer in customers:
-            customer_id = get_customer_id(visitingCustomer.customer_name, visitingCustomer.character_class)
-            if customer_id:
-                insert_customer_visit(customer_id, visit_id)
-            else:
-                new_customer_id = insert_new_customer(visitingCustomer.customer_name, visitingCustomer.character_class, visitingCustomer.level)
-                insert_customer_visit(new_customer_id, visit_id)
+    log_customer_visit(customers, visit_id)
 
     print(customers)
-
     return {"success": True}
 
 @router.post("/")

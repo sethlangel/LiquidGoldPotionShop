@@ -44,3 +44,8 @@ class Barrel(BaseModel):
     price: int
 
     quantity: int
+
+class Customer(BaseModel):
+    customer_name: str
+    character_class: str
+    level: int
