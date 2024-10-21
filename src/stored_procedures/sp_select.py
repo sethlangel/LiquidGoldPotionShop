@@ -42,7 +42,7 @@ def get_gold_quantity():
 
 def get_liquid_inventory():
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(f"SELECT * FROM liquid_inventory"))
+        result = connection.execute(sqlalchemy.text(f"SELECT * FROM liquid_inventory ORDER BY id ASC"))
         list = result.mappings().all()
         liquidInventory = [LiquidInventory(**item) for item in list]
         return liquidInventory
