@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
 from src.stored_procedures.sp_select import get_audit
+from src import database as db
 
 router = APIRouter(
     prefix="/inventory",
@@ -12,7 +13,8 @@ router = APIRouter(
 
 @router.get("/audit")
 def audit():
-    return get_audit()
+    with db.engine.begin() as connection:
+        return get_audit(connection)
 
 # Gets called once a day
 @router.post("/plan")
