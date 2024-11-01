@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth, inventory
-from src.api.inventory import get_potion_inventory
 from src.classes import Barrel
 from src.functions import find_available_liquid
 from src.stored_procedures.sp_insert import insert_gold_ledger_entry, insert_gold_transaction, insert_liquid_ledger_entry, insert_liquid_transaction
-from src.stored_procedures.sp_select import get_liquid_id, get_liquid_inventory, get_store_info
+from src.stored_procedures.sp_select import get_liquid_id, get_liquid_inventory, get_potion_inventory, get_store_info
 from src import database as db
 
 router = APIRouter(

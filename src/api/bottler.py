@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
 from src.api import auth
-from src.api.inventory import get_liquid_inventory, get_potion_inventory
 from src.classes import PotionPlan
 from src.functions import find_available_liquid, find_index_by_potion_type, convert_potion_to_liquid
 from src.stored_procedures.sp_insert import insert_liquid_ledger_entry, insert_liquid_transaction, insert_potion_ledger_entry, insert_potion_transaction
-from src.stored_procedures.sp_select import get_audit, get_potion_id_by_type, get_store_info
+from src.stored_procedures.sp_select import get_audit, get_liquid_inventory, get_potion_id_by_type, get_potion_inventory, get_store_info
 from src import database as db
 
 router = APIRouter(

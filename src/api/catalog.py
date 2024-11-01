@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from src.api.inventory import get_potion_inventory
 from src import database as db
+from src.stored_procedures.sp_select import get_potion_inventory
 
 router = APIRouter()
 
