@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 class PotionInventory(BaseModel):
+    id: int
     sku: str
     name: str
     potion_type: list[int]
@@ -8,8 +9,8 @@ class PotionInventory(BaseModel):
     quantity: int
 
 class LiquidInventory(BaseModel):
+    id: int
     sku: str
-    name: str
     potion_type: list[int]
     quantity: int
 

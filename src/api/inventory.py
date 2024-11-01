@@ -2,7 +2,7 @@ import sqlalchemy
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
-from src.stored_procedures.sp_select import get_audit, get_liquid_inventory, get_potion_inventory, get_gold_quantity
+from src.stored_procedures.sp_select import get_audit
 
 router = APIRouter(
     prefix="/inventory",

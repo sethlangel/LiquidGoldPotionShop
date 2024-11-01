@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from src.api import auth
 from enum import Enum
-from .inventory import get_gold_quantity
-from ..stored_procedures.sp_insert import insert_customer_visit, insert_new_customer, insert_new_cart, \
-    insert_item_into_cart, log_customer_visit
-from ..stored_procedures.sp_select import get_customer_id, get_potion_id, get_shopping_cart
-from ..stored_procedures.sp_update import update_cart_payment_method, update_potion_inventory, update_gold
+from ..stored_procedures.sp_insert import insert_customer_visit, insert_gold_ledger_entry, insert_gold_transaction, insert_new_customer, insert_new_cart, \
+    insert_item_into_cart, insert_potion_ledger_entry, insert_potion_transaction, log_customer_visit
+from ..stored_procedures.sp_select import get_customer_id, get_potion_id_by_sku, get_shopping_cart
+from ..stored_procedures.sp_update import update_cart_payment_method
 from src.classes import Customer
+from src import database as db
 
 router = APIRouter(
     prefix="/carts",
@@ -75,19 +75,26 @@ def search_orders(
 
 @router.post("/visits/{visit_id}")
 def post_visits(visit_id: int, customers: list[Customer]):
-    log_customer_visit(customers, visit_id)
+    try:
+        with db.engine.begin() as connection: 
+            log_customer_visit(customers, visit_id, connection)
 
-    print(customers)
-    return {"success": True}
+            print(customers)
+            return {"success": True}
+    except Exception as e:
+        print(f"Error during visit: {e}")
 
 @router.post("/")
 def create_cart(new_cart: Customer):
-    customer_id = get_customer_id(new_cart.customer_name, new_cart.character_class)
-    cart_id = insert_new_cart(customer_id)
+    try:
+        with db.engine.begin() as connection: 
+            customer_id = get_customer_id(new_cart.customer_name, new_cart.character_class, connection)
+            cart_id = insert_new_cart(customer_id, connection)
 
-    print(f"/carts/ cart_id: {cart_id}")
-    return {"cart_id": cart_id}
-
+            print(f"/carts/ cart_id: {cart_id}")
+            return {"cart_id": cart_id}
+    except Exception as e:
+        print(f"Error at cart creation: {e}")
 
 class CartItem(BaseModel):
     quantity: int
@@ -95,44 +102,56 @@ class CartItem(BaseModel):
 
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
-    potion_id = get_potion_id(item_sku)
-    insert_item_into_cart(cart_id, potion_id, cart_item.quantity)
+    try:
+        with db.engine.begin() as connection: 
+            potion_id = get_potion_id_by_sku(item_sku, connection)
+            insert_item_into_cart(cart_id, potion_id, cart_item.quantity, connection)
+            print(f" /carts/cart_id/items/item_sku | item_sku: {item_sku}, quantity: {cart_item}")
 
-    print(f" /carts/cart_id/items/item_sku | item_sku: {item_sku}, quantity: {cart_item}")
-
-    return "OK"
-
+            return "OK"
+    except Exception as e:
+        print(f"Error at item added into cart: {e}")
 
 class CartCheckout(BaseModel):
     payment: str
 
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
-    cart =  get_shopping_cart(cart_id)
+    try:
+        with db.engine.begin() as connection: 
+            cart =  get_shopping_cart(cart_id, connection)
 
-    total_potions = 0
-    total_gold = 0
+            total_potions = 0
+            total_gold = 0
 
-    for item in cart:
-        total_potions += item.cart_item_quantity
-        total_gold += item.cart_item_quantity * item.potion_price
+            potion_transaction_id = insert_potion_transaction(f"Selling to cart: {cart_id}", connection)
+            gold_transaction_id = insert_gold_transaction("Potions Sold", cart_id, connection)
 
-        new_potion_quantity = item.potion_inventory_quantity - item.cart_item_quantity
+            potion_list = []
 
-        print(f"""/carts/{cart_id}/checkout | 
-              Old Potion Quantity: {item.potion_inventory_quantity} 
-              Total Bought: {item.cart_item_quantity} 
-              New Potion Quantity: {new_potion_quantity} 
-              for potion type: {item.potion_type}
-              Total Sale: {item.cart_item_quantity * item.potion_price}""")
-        
-        update_potion_inventory(-item.cart_item_quantity, item.potion_type)
+            for item in cart:
+                total_potions += item.cart_item_quantity
+                total_gold += item.cart_item_quantity * item.potion_price
 
-    update_gold(total_gold)
-    update_cart_payment_method(cart_id, cart_checkout.payment)
+                new_potion_quantity = item.potion_inventory_quantity - item.cart_item_quantity
 
-    checkout_result = {"total_potions_bought": total_potions, "total_gold_paid": total_gold}
+                print(f"""/carts/{cart_id}/checkout | 
+                    Old Potion Quantity: {item.potion_inventory_quantity} 
+                    Total Bought: {item.cart_item_quantity} 
+                    New Potion Quantity: {new_potion_quantity} 
+                    for potion type: {item.potion_type}
+                    Total Sale: {item.cart_item_quantity * item.potion_price}""")
+                
+                potion_list.append((potion_transaction_id, item.potion_id, -item.cart_item_quantity))
+                
+            insert_potion_ledger_entry(potion_list, connection)
+            insert_gold_ledger_entry(gold_transaction_id, total_gold, connection)
+            update_cart_payment_method(cart_id, cart_checkout.payment, connection)
 
-    print(f"/carts/cart_id/checkout | {checkout_result}")
+            checkout_result = {"total_potions_bought": total_potions, "total_gold_paid": total_gold}
 
-    return checkout_result
+            print(f"/carts/cart_id/checkout | {checkout_result}")
+
+            return checkout_result
+    except Exception as e:
+        print(f"Error at checkout: {e}")
