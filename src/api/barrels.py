@@ -48,7 +48,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
             liquid_inventory = get_liquid_inventory(connection)
             potion_inventory = get_potion_inventory(connection)
 
-            print(wholesale_catalog)
+            print(f"Barrels: {wholesale_catalog}")
 
             updated_gold = store_info.gold
 
@@ -61,9 +61,6 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
             sorted_index = sorted(range(len(grand_total_liquid)), key=lambda i: grand_total_liquid[i])
 
-            print(liquid_needed)
-            print(sorted_index)
-
             sorted_barrels = sorted(
             wholesale_catalog,
             key=lambda barrel: (
@@ -74,7 +71,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     -barrel.potion_type[sorted_index[3]]
                 )
             )
-            print(sorted_barrels)
+            print(f"Barrels Sorted: {sorted_barrels}")
             purchase_barrels = []
 
             for i in range(len(liquid_needed)):

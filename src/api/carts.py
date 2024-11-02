@@ -77,9 +77,11 @@ def search_orders(
 def post_visits(visit_id: int, customers: list[Customer]):
     try:
         with db.engine.begin() as connection: 
-            log_customer_visit(customers, visit_id, connection)
+            print(f"Customers: {customers}")
 
-            print(customers)
+            if len(customers) > 0:
+                log_customer_visit(customers, visit_id, connection)
+                
             return {"success": True}
     except Exception as e:
         print(f"Error during visit: {e}")
