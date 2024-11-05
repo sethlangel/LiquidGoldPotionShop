@@ -13,7 +13,7 @@ def insert_new_customer(customer_name: str, customer_class: str, customer_level:
     return result.mappings().first()['id']
 
 def insert_new_cart(customer_id: int, connection: sqlalchemy.Connection):
-    result = connection.execute(sqlalchemy.text(f"INSERT INTO cart (customer_id) VALUES :customer_id RETURNING id"), {"customer_id": customer_id})
+    result = connection.execute(sqlalchemy.text(f"INSERT INTO cart (customer_id) VALUES (:customer_id) RETURNING id"), {"customer_id": customer_id})
     return result.mappings().first()['id']
 
 def insert_item_into_cart(cart_id: int, potion_id: int, quantity: int, connection: sqlalchemy.Connection):
