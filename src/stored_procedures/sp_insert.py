@@ -6,18 +6,18 @@ from src.classes import Customer
 
 
 def insert_customer_visit(customer_id: int, visit_id: int, connection: sqlalchemy.Connection):
-        connection.execute(sqlalchemy.text(f"INSERT INTO customer_visit (customer_id, timestamp, visit_id) VALUES ({customer_id}, '{get_timestamp()}', {visit_id})"))
+        connection.execute(sqlalchemy.text(f"INSERT INTO customer_visit (customer_id, timestamp, visit_id) VALUES :customer_id, :timestamp, :visit_id"), {"customer_id": customer_id, "timestamp": get_timestamp(), "visit_id": visit_id})
 
 def insert_new_customer(customer_name: str, customer_class: str, customer_level: int, connection: sqlalchemy.Connection):
-    result = connection.execute(sqlalchemy.text(f"INSERT INTO customer (name, level, class) VALUES ('{customer_name}', {customer_level}, '{customer_class}') RETURNING id"))
+    result = connection.execute(sqlalchemy.text(f"INSERT INTO customer (name, level, class) VALUES :name, :level, :class RETURNING id"), {"name": customer_name, "level": customer_level, "class": customer_class})
     return result.mappings().first()['id']
 
 def insert_new_cart(customer_id: int, connection: sqlalchemy.Connection):
-    result = connection.execute(sqlalchemy.text(f"INSERT INTO cart (customer_id) VALUES ({customer_id}) RETURNING id"))
+    result = connection.execute(sqlalchemy.text(f"INSERT INTO cart (customer_id) VALUES :customer_id RETURNING id"), {"customer_id": customer_id})
     return result.mappings().first()['id']
 
 def insert_item_into_cart(cart_id: int, potion_id: int, quantity: int, connection: sqlalchemy.Connection):
-    connection.execute(sqlalchemy.text(f"INSERT INTO cart_items (cart_id, potion_id, quantity) VALUES ({cart_id}, {potion_id}, {quantity})"))
+    connection.execute(sqlalchemy.text(f"INSERT INTO cart_items (cart_id, potion_id, quantity) VALUES (:cart_id, :potion_id, :quantity)"), {"cart_id": cart_id, "potion_id": potion_id, "quantity": quantity})
 
 def log_customer_visit(customers: List[Customer], visit_id: int, connection: sqlalchemy.Connection):
     customers_tuples = [(customer.customer_name, customer.character_class, customer.level) for customer in customers]
