@@ -2,6 +2,7 @@ import sqlalchemy
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
+from src.stored_procedures.sp_insert import insert_gold_ledger_entry, insert_gold_transaction
 from src.stored_procedures.sp_select import get_audit, get_store_info
 from src import database as db
 from src.stored_procedures.sp_update import update_capacities
@@ -49,5 +50,7 @@ def deliver_capacity_plan(capacity_purchase : CapacityPurchase, order_id: int):
 
     with db.engine.begin() as connection:
         update_capacities(connection)
-
+        gold_transaction_id = insert_gold_transaction("Purchased inventory expansions.", None, connection)
+        insert_gold_ledger_entry(gold_transaction_id, -2000, connection)
+        
     return "OK"
