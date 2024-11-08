@@ -49,7 +49,7 @@ def search_orders(
     """
     with db.engine.begin() as connection:
         search_page = 0 if search_page == "" else int(search_page)
-        previous = "" if int(search_page) - 5 <= 0 else int(search_page) - 5
+        previous = "" if int(search_page) == 0 else int(search_page) - 5
         next = int(search_page) + 5
         results = []
 
