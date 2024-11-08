@@ -56,7 +56,6 @@ def search_orders(
         info = get_search(potion_sku, customer_name, search_page, sort_col, sort_order, connection)
 
         return {
-            "previous": previous,
             "next": next,
             "results": info
         }
