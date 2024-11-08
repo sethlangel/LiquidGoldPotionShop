@@ -4,9 +4,9 @@ from src.api import auth
 from enum import Enum
 from ..stored_procedures.sp_insert import insert_customer_visit, insert_gold_ledger_entry, insert_gold_transaction, insert_new_customer, insert_new_cart, \
     insert_item_into_cart, insert_potion_ledger_entry, insert_potion_transaction, log_customer_visit
-from ..stored_procedures.sp_select import get_customer_id, get_potion_id_by_sku, get_shopping_cart
+from ..stored_procedures.sp_select import get_customer_id, get_potion_id_by_sku, get_search, get_shopping_cart
 from ..stored_procedures.sp_update import update_cart_payment_method
-from src.classes import Customer
+from src.classes import Customer, search_sort_options, search_sort_order
 from src import database as db
 
 router = APIRouter(
@@ -14,16 +14,6 @@ router = APIRouter(
     tags=["cart"],
     dependencies=[Depends(auth.get_api_key)],
 )
-
-class search_sort_options(str, Enum):
-    customer_name = "customer_name"
-    item_sku = "item_sku"
-    line_item_total = "line_item_total"
-    timestamp = "timestamp"
-
-class search_sort_order(str, Enum):
-    asc = "asc"
-    desc = "desc"
 
 @router.get("/search/", tags=["search"])
 def search_orders(
@@ -57,20 +47,19 @@ def search_orders(
     Your results must be paginated, the max results you can return at any
     time is 5 total line items.
     """
+    with db.engine.begin() as connection:
+        search_page = 0 if search_page == "" else int(search_page)
+        previous = "" if int(search_page) - 5 < 0 else int(search_page) - 5
+        next = int(search_page) + 5
+        results = []
 
-    return {
-        "previous": "",
-        "next": "",
-        "results": [
-            {
-                "line_item_id": 1,
-                "item_sku": "1 oblivion potion",
-                "customer_name": "Scaramouche",
-                "line_item_total": 50,
-                "timestamp": "2021-01-01T00:00:00Z",
-            }
-        ],
-    }
+        info = get_search(potion_sku, customer_name, search_page, sort_col, sort_order, connection)
+
+        return {
+            "previous": previous,
+            "next": next,
+            "results": info
+        }
 
 
 @router.post("/visits/{visit_id}")

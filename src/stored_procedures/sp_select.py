@@ -1,6 +1,6 @@
 import sqlalchemy
 from src import database as db
-from src.classes import Audit, LiquidInventory, PotionInventory, ShoppingCart, StoreInfo
+from src.classes import Audit, LiquidInventory, PotionInventory, Purchases, ShoppingCart, StoreInfo, search_sort_options, search_sort_order
 
 def get_customer_id(customer_name: str, customer_class: str, connection: sqlalchemy.Connection):
     with db.engine.begin() as conn:
@@ -48,3 +48,52 @@ def get_audit(connection: sqlalchemy.Connection):
 def get_store_info(connection: sqlalchemy.Connection):
     result = connection.execute(sqlalchemy.text("SELECT * FROM store_data"))
     return StoreInfo(**result.mappings().first()) 
+
+def get_search(potion_name: str, customer_name: str, search_page: int, sort_col: search_sort_options, sort_order: search_sort_order, connection: sqlalchemy.Connection):
+    if sort_col is search_sort_options.timestamp:
+        order_by = db.purchases.c.time
+    elif sort_col is search_sort_options.customer_name:
+        order_by = db.purchases.c.customer
+    elif sort_col is search_sort_options.item_sku:
+        order_by = db.purchases.c.item
+    elif sort_col is search_sort_options.line_item_total:
+        order_by = db.purchases.c.cost
+    else:
+        assert False
+
+    stmt = (
+        sqlalchemy.select(
+            db.purchases.c.time,
+            db.purchases.c.customer,
+            db.purchases.c.item,
+            db.purchases.c.gold,
+        )
+        .limit(5)
+        .offset(search_page)
+        .order_by(order_by, db.purchases.c.time)
+    )
+
+    # filter only if name parameter is passed
+    if potion_name != "":
+        stmt = stmt.where(db.purchases.c.item.ilike(f"%{potion_name}%"))
+
+    if customer_name != "":
+        stmt = stmt.where(db.purchases.c.customer.ilike(f"%{customer_name}%"))
+
+    with db.engine.connect() as conn:
+        result = conn.execute(stmt)
+        json = []
+        for i, row in enumerate(result):
+            json.append(
+                {
+                    "line_item_id": i,
+                    "customer_name": row.customer,
+                    "item_sku": row.item,
+                    "line_item_total": row.gold,
+                    "timestamp": row.time
+                }
+            )
+
+        return json
+    
+    return [Purchases(**item) for item in result.mappings().all()]

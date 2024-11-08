@@ -1,3 +1,4 @@
+from enum import Enum
 from pydantic import BaseModel
 
 class PotionInventory(BaseModel):
@@ -13,6 +14,22 @@ class LiquidInventory(BaseModel):
     sku: str
     potion_type: list[int]
     quantity: int
+
+class Purchases(BaseModel):
+    customer: str
+    item: str
+    cost: int
+    time: str
+
+class search_sort_options(str, Enum):
+    customer_name = "customer_name"
+    item_sku = "item_sku"
+    line_item_total = "line_item_total"
+    timestamp = "timestamp"
+
+class search_sort_order(str, Enum):
+    asc = "asc"
+    desc = "desc"
 
 class ShoppingCart(BaseModel):
     cart_item_quantity: int
