@@ -50,16 +50,22 @@ def get_store_info(connection: sqlalchemy.Connection):
     return StoreInfo(**result.mappings().first()) 
 
 def get_search(potion_name: str, customer_name: str, search_page: int, sort_col: search_sort_options, sort_order: search_sort_order, connection: sqlalchemy.Connection):
+    def sort(column):
+        if sort_order is search_sort_order.asc:
+            return sqlalchemy.asc(column)
+        else:
+            return sqlalchemy.desc(column)
+
     if sort_col is search_sort_options.timestamp:
-        order_by = db.purchases.c.time
+        order_by = sort(db.purchases.c.time)
     elif sort_col is search_sort_options.customer_name:
-        order_by = db.purchases.c.customer
+        order_by = sort(db.purchases.c.customer)
     elif sort_col is search_sort_options.item_sku:
-        order_by = db.purchases.c.item
+        order_by = sort(db.purchases.c.item)
     elif sort_col is search_sort_options.line_item_total:
-        order_by = db.purchases.c.cost
+        order_by = sort(db.purchases.c.cost)
     else:
-        assert False
+        assert False 
 
     stmt = (
         sqlalchemy.select(
@@ -68,7 +74,7 @@ def get_search(potion_name: str, customer_name: str, search_page: int, sort_col:
             db.purchases.c.item,
             db.purchases.c.gold,
         )
-        .limit(5)
+        .limit(6)
         .offset(search_page)
         .order_by(order_by, db.purchases.c.time)
     )
@@ -95,5 +101,3 @@ def get_search(potion_name: str, customer_name: str, search_page: int, sort_col:
             )
 
         return json
-    
-    return [Purchases(**item) for item in result.mappings().all()]

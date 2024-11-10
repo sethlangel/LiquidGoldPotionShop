@@ -52,14 +52,14 @@ def search_orders(
         previous = "" if int(search_page) == 0 else str(int(search_page) - 5)
         results = []
 
-        info = get_search(potion_sku, customer_name, search_page, sort_col, sort_order, connection)
+        page = get_search(potion_sku, customer_name, search_page, sort_col, sort_order, connection)
 
-        next = str(search_page + 5) if len(info) == 5 else ""
+        next = str(search_page + 5) if len(page) == 6 else ""
 
         return {
             "previous": previous,
             "next": next,
-            "results": info
+            "results": page
         }
 
 
