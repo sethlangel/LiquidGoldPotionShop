@@ -50,7 +50,6 @@ def search_orders(
     with db.engine.begin() as connection:
         search_page = 0 if search_page == "" else int(search_page)
         previous = "" if int(search_page) == 0 else str(int(search_page) - 5)
-        results = []
 
         page = get_search(potion_sku, customer_name, search_page, sort_col, sort_order, connection)
 
@@ -59,7 +58,7 @@ def search_orders(
         return {
             "previous": previous,
             "next": next,
-            "results": page
+            "results": page[0:5]
         }
 
 
