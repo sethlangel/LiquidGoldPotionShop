@@ -63,7 +63,7 @@ def get_search(potion_name: str, customer_name: str, search_page: int, sort_col:
     elif sort_col is search_sort_options.item_sku:
         order_by = sort(db.purchases.c.item)
     elif sort_col is search_sort_options.line_item_total:
-        order_by = sort(db.purchases.c.cost)
+        order_by = sort(db.purchases.c.gold)
     else:
         assert False 
 
