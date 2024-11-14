@@ -59,7 +59,7 @@ def get_bottle_plan():
             store_info = get_store_info(connection)
 
             potion_limit = store_info.potion_capacity * 50
-            max_to_make = potion_limit // 5
+            max_to_make = potion_limit // 6
 
             potions_to_make = []
             total_potion_inventory = store_info.number_of_potions
@@ -75,7 +75,7 @@ def get_bottle_plan():
                             num_to_make = min(num_to_make, can_make)
 
                     if total_potion_inventory + num_to_make > potion_limit:
-                        num_to_make = potion_limit // 5 - total_potion_inventory
+                        num_to_make = potion_limit // 6 - total_potion_inventory
 
                     if num_to_make > 0:
                         for i, liquid_needed in enumerate(potion.potion_type):
