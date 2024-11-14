@@ -34,7 +34,10 @@ def get_capacity_plan():
                 "ml_capacity": 1
             } 
         
-        return {}
+        return {
+        "potion_capacity": 0,
+        "ml_capacity": 0
+        }
 
 class CapacityPurchase(BaseModel):
     potion_capacity: int
