@@ -53,7 +53,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
             updated_gold = store_info.gold
 
             liquid_limit = store_info.liquid_capacity * 10000
-            liquid_needed = [((liquid_limit // 3) - liquid_inventory[i].quantity) for i in range(len(liquid_inventory))]
+            liquid_needed = [((liquid_limit // 4) - liquid_inventory[i].quantity) for i in range(len(liquid_inventory))]
 
             total_liquid_in_potions = [sum(potion.potion_type[i] * potion.quantity for potion in potion_inventory if potion.quantity > 0) for i in range(4)]
             available_liquid_in_ml = find_available_liquid(liquid_inventory)
